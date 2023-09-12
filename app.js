@@ -2,38 +2,20 @@ const worker = new Worker('./workerOpfs.js');
 
 const nameEl = document.getElementsByName('fileName')[0];
 const inputEl = document.getElementsByName('fileInput')[0];
+const readFileDataButton = document.getElementById('readFile');
 
-inputEl.addEventListener('change', async function (value) {
+inputEl.addEventListener('change', async function () {
 	for (const file of this.files) {
 		// save file with OPFS
 		worker.postMessage({ method: 'saveFile', file, fileName: nameEl.value });
 	}
+	this.value = [];
 });
 
-const buttonEl = document.getElementById('readFile');
-buttonEl.addEventListener('click', async function (e) {
+readFileDataButton.addEventListener('click', async function (e) {
 	e.preventDefault();
-	// read file with OPFS
-	worker.postMessage({ method: 'readFile', fileName: nameEl.value });
+	window.readFileButtonClick(nameEl.value?.trim());
 });
-
-worker.onmessage = function (event) {
-	if (event.data.updateList === true) {
-		listFiles();
-	}
-
-	console.log(event);
-	console.log(JSON.stringify(Object.keys(event.data?.result?.file), null, 2));
-
-	const { file } = event.data.result || {};
-	const fileInfo = {
-		name: file?.name,
-		size: file?.size,
-		type: file?.type,
-		lastModified: file?.lastModified,
-	};
-	document.getElementById('fileData').innerHTML = JSON.stringify(fileInfo, null, 2);
-};
 
 const numberFormatter = new Intl.NumberFormat('en-US');
 
@@ -50,7 +32,12 @@ async function listFiles() {
 		'<ul>',
 		...files.map(([name, file]) => {
 			const size = numberFormatter.format(file.size);
-			return `<li><button onclick="readFileButtonClick('${name}')"><b>${name}</b> <span class=size>${size}</span></button></li>`;
+			return `<li>
+        <button onclick="readFileButtonClick('${name}')">
+          <b>${name}</b>
+          <span class=size>${size}</span>
+        </button>
+      </li>`;
 		}),
 		'</ul>',
 	].join('\n');
@@ -58,6 +45,32 @@ async function listFiles() {
 
 window.readFileButtonClick = function (fileName) {
 	worker.postMessage({ method: 'readFile', fileName });
+	worker.postMessage({ method: 'readFileWithAccessHandle', fileName });
 };
 
-listFiles();
+worker.onmessage = function (event) {
+	if (event.data.updateList === true) {
+		listFiles();
+	}
+
+	console.log('onmessage event recieved from worker', event, JSON.stringify(Object.keys(event.data?.result?.file), null, 2));
+
+	const { method = '', result: { file } = {} } = event.data || {};
+	const fileInfo = {
+		name: file?.name,
+		size: file?.size,
+		type: file?.type,
+		lastModified: file?.lastModified,
+	};
+
+	if (method === 'readFileWithAccessHandle' || method === 'saveFile') {
+		document.getElementById('fileDataAccessHandle').innerHTML = JSON.stringify(fileInfo, null, 2);
+	}
+	if (method === 'readFile' || method === 'saveFile') {
+		document.getElementById('fileData').innerHTML = JSON.stringify(fileInfo, null, 2);
+	}
+};
+
+addEventListener('DOMContentLoaded', () => {
+	listFiles();
+});
