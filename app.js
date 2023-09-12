@@ -4,23 +4,27 @@ const nameEl = document.getElementsByName('fileName')[0];
 const inputEl = document.getElementsByName('fileInput')[0];
 
 inputEl.addEventListener('change', async function (value) {
-	const file = this.files[0];
-
-	// save file with OPFS
-	worker.postMessage({ method: 'saveFile', file, fileName: nameEl.value });
-
-	setTimeout(listFiles, 1000);
+	for (const file of this.files) {
+		// save file with OPFS
+		worker.postMessage({ method: 'saveFile', file, fileName: nameEl.value });
+	}
 });
 
 const buttonEl = document.getElementById('readFile');
-buttonEl.addEventListener('click', async function (value) {
+buttonEl.addEventListener('click', async function (e) {
+	e.preventDefault();
 	// read file with OPFS
 	worker.postMessage({ method: 'readFile', fileName: nameEl.value });
 });
 
 worker.onmessage = function (event) {
+	if (event.data.updateList === true) {
+		listFiles();
+	}
+
 	console.log(event);
-	console.log(JSON.stringify(event.data, null, 2));
+	console.log(JSON.stringify(Object.keys(event.data?.result?.file), null, 2));
+
 	const { file } = event.data.result || {};
 	const fileInfo = {
 		name: file?.name,
@@ -30,6 +34,8 @@ worker.onmessage = function (event) {
 	};
 	document.getElementById('fileData').innerHTML = JSON.stringify(fileInfo, null, 2);
 };
+
+const numberFormatter = new Intl.NumberFormat('en-US');
 
 async function listFiles() {
 	const rootDirHandle = await navigator.storage.getDirectory();
@@ -43,7 +49,8 @@ async function listFiles() {
 	document.querySelector('#files').innerHTML = [
 		'<ul>',
 		...files.map(([name, file]) => {
-			return `<li style="margin:10px 0"><button onclick="readFileButtonClick('${name}')"><b>${name}</b> ${file.size}<button></li>`;
+			const size = numberFormatter.format(file.size);
+			return `<li><button onclick="readFileButtonClick('${name}')"><b>${name}</b> <span class=size>${size}</span></button></li>`;
 		}),
 		'</ul>',
 	].join('\n');

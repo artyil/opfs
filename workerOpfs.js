@@ -54,7 +54,7 @@ onmessage = async function (event) {
 			const result = await saveFile(file, fileName);
 
 			console.log('🧵 OPFS Worker: Posting message back to main script');
-			postMessage({ result, messageId });
+			postMessage({ result, messageId, updateList: true });
 			break;
 		}
 

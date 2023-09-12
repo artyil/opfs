@@ -2,21 +2,102 @@
 <html>
 	<head>
 		<title>Test OPFS</title>
+		<style>
+			* {
+				box-sizing: border-box;
+			}
+
+			body,
+			html {
+				font-family: sans-serif;
+				margin: 0;
+				padding: 10px;
+				font-size: 16px;
+				color: black;
+			}
+			input {
+				font-size: 16px;
+				padding: 6px 12px;
+			}
+			button {
+				box-shadow: 0px 1px 0px 0px #ffffff;
+				background-color: #abaeb0;
+				border-radius: 6px;
+				border: 1px solid #dcdcdc;
+				display: inline-block;
+				font-size: 15px;
+				cursor: pointer;
+				padding: 6px 24px;
+			}
+			button:hover {
+				filter: brightness(110%);
+			}
+			button:active {
+				position: relative;
+				top: 1px;
+			}
+
+			.section {
+				padding: 20px;
+			}
+			.details {
+				display: flex;
+				flex-direction: row;
+				gap: 20px;
+				/* justify-content: space-between; */
+			}
+			ul {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+			}
+			ul > li {
+				max-width: 200px;
+				margin-bottom: 10px;
+			}
+			.files-list button {
+				width: 100%;
+			}
+			.files-list li .size {
+				font-weight: 700;
+				font-size: 0.9em;
+				color: blue;
+			}
+		</style>
 	</head>
 	<body>
 		<h1>Test OPFS</h1>
 
-		<div>input file</div>
-		<input type="text" name="fileName" />
-		<div>input file</div>
-		<input type="file" name="fileInput" />
+		<section class="section">
+			<form id="uploadFileForm">
+				<div>input file</div>
+				<input type="file" name="fileInput" multiple />
+			</form>
+		</section>
 
-		<button id="readFile">Read File</button>
-		<pre id="fileData"></pre>
-		<div>
-			<h3>Files List</h3>
-			<div style="padding: 20px" id="files"></div>
-		</div>
+		<section class="section">
+			<form id="previewFileForm">
+				<h3>Read file</h3>
+				<input type="text" name="fileName" placeholder="Enter existing file name" />
+				<button id="readFile">Read File</button>
+			</form>
+		</section>
+
+		<section class="details">
+			<section class="section files-list">
+				<div>
+					<h3>Files List</h3>
+					<div id="files"></div>
+				</div>
+			</section>
+			<section class="section">
+				<div>
+					<h3>Files Data</h3>
+					<pre id="fileData"></pre>
+				</div>
+			</section>
+		</section>
+
 		<script type="module" src="./app.js"></script>
 	</body>
 </html>
