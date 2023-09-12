@@ -22,7 +22,7 @@ async function saveFile(fileToClone, fileName) {
 }
 
 /** @param {string} fileName  */
-async function readFile(fileName) {
+async function readFileWithAccessHandle(fileName) {
 	const rootDirHandle = await navigator.storage.getDirectory();
 	const fileHandle = await rootDirHandle.getFileHandle(fileName);
 
@@ -34,6 +34,22 @@ async function readFile(fileName) {
 	await accessHandle.close();
 
 	const existingFile = new File([readBuffer], fileHandle.name /* { type: fileHandle.type } */);
+
+	console.log('readFile results', existingFile.size);
+
+	return {
+		file: existingFile,
+	};
+}
+
+/** @param {string} fileName  */
+async function readFile(fileName) {
+	const rootDirHandle = await navigator.storage.getDirectory();
+	const fileHandle = await rootDirHandle.getFileHandle(fileName);
+
+	const existingFile = await fileHandle.getFile();
+
+	// const existingFile = new File([readBuffer], fileHandle.name /* { type: fileHandle.type } */);
 
 	console.log('readFile results', existingFile.size);
 
@@ -54,7 +70,7 @@ onmessage = async function (event) {
 			const result = await saveFile(file, fileName);
 
 			console.log('🧵 OPFS Worker: Posting message back to main script');
-			postMessage({ result, messageId, updateList: true });
+			postMessage({ result, messageId, updateList: true, method });
 			break;
 		}
 
@@ -65,7 +81,18 @@ onmessage = async function (event) {
 				file: readResult.file,
 			};
 			console.log('🧵 OPFS Worker: Posting message back to main script');
-			postMessage({ result, messageId });
+			postMessage({ result, messageId, method });
+			break;
+		}
+
+		case 'readFileWithAccessHandle': {
+			if (!fileName) throw new TypeError('fileName required');
+			const readResult = await readFileWithAccessHandle(fileName, 'message');
+			const result = {
+				file: readResult.file,
+			};
+			console.log('🧵 OPFS Worker: Posting message back to main script');
+			postMessage({ result, messageId, method });
 			break;
 		}
 
