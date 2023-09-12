@@ -3,7 +3,9 @@ async function saveFile(fileToClone, fileName) {
 	fileName = fileName || fileToClone.name;
 
 	const rootDirHandle = await navigator.storage.getDirectory();
-	const fileHandle = await rootDirHandle.getFileHandle(fileName, { create: true });
+	const fileHandle = await rootDirHandle.getFileHandle(fileName, {
+		create: true,
+	});
 
 	const buffer = new DataView(await fileToClone.arrayBuffer());
 

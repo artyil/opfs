@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>Test OPFS</title>
@@ -35,6 +35,11 @@
 			button:active {
 				position: relative;
 				top: 1px;
+			}
+			button[disabled] {
+				opacity: 0.8;
+				user-select: none;
+				pointer-events: none;
 			}
 
 			.section {
@@ -96,15 +101,17 @@
 			<div style="border-left: 1px solid black"></div>
 			<section class="section">
 				<div>
-					<h3>Files Data</h3>
+					<h3>File Data using <code>FileSystemFileHandle.getFile()</code> handle</h3>
 					<pre id="fileData"></pre>
+					<button id="fileDataDownload">Download File</button>
 				</div>
 			</section>
 			<div style="border-left: 1px solid black"></div>
 			<section class="section">
 				<div>
-					<h3>Files Data Using AccessHandle (read buffer sync)</h3>
+					<h3>File Data using <code>FileSystemSyncAccessHandle (read)</code></h3>
 					<pre id="fileDataAccessHandle"></pre>
+					<button id="fileDataAccessHandleDownload">Download File</button>
 				</div>
 			</section>
 		</section>

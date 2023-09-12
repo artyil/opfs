@@ -19,6 +19,19 @@ readFileDataButton.addEventListener('click', async function (e) {
 
 const numberFormatter = new Intl.NumberFormat('en-US');
 
+async function downloadFile(file) {
+	const blobUrl = URL.createObjectURL(file);
+	const a = document.createElement('a');
+	a.href = blobUrl;
+	a.download = file.name;
+	a.style.display = 'none';
+	document.body.appendChild(a);
+	a.click();
+
+	URL.revokeObjectURL(blobUrl);
+	document.body.removeChild(a);
+}
+
 async function listFiles() {
 	const rootDirHandle = await navigator.storage.getDirectory();
 	const entries = await rootDirHandle.entries();
@@ -48,7 +61,25 @@ window.readFileButtonClick = function (fileName) {
 	worker.postMessage({ method: 'readFileWithAccessHandle', fileName });
 };
 
+const asyncWorkerHandlers = new Map();
+function downloadOpfsFile(fileName, method) {
+	const messageId = Date.now() + '' + Math.random();
+
+	asyncWorkerHandlers.set(messageId, (workerEvent) => {
+		asyncWorkerHandlers.delete(messageId);
+		const { result: { file } = {} } = workerEvent.data || {};
+		downloadFile(file);
+	});
+
+	worker.postMessage({ method, fileName, messageId });
+}
+
 worker.onmessage = function (event) {
+	if (event.data.messageId) {
+		asyncWorkerHandlers.get(event.data.messageId)?.(event);
+		return;
+	}
+
 	if (event.data.updateList === true) {
 		listFiles();
 	}
@@ -65,9 +96,12 @@ worker.onmessage = function (event) {
 
 	if (method === 'readFileWithAccessHandle' || method === 'saveFile') {
 		document.getElementById('fileDataAccessHandle').innerHTML = JSON.stringify(fileInfo, null, 2);
+		document.getElementById('fileDataAccessHandleDownload').onclick = () =>
+			downloadOpfsFile(fileInfo.name, 'readFileWithAccessHandle');
 	}
 	if (method === 'readFile' || method === 'saveFile') {
 		document.getElementById('fileData').innerHTML = JSON.stringify(fileInfo, null, 2);
+		document.getElementById('fileDataDownload').onclick = () => downloadOpfsFile(fileInfo.name, 'readFile');
 	}
 };
 
